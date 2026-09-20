@@ -13,16 +13,7 @@ def scan(path):
         ["semgrep", "scan", "--config=auto","--json", path], capture_output=True, text=True
         )
 
-# if res.returncode != 0:
-#     print("Semgrep error:")
-#     print(res.stderr)
-#     exit()
-
     data = json.loads(res.stdout)
-
-# if(not data['results']):
-#     print("No issues found")
-#     exit()
 
     for i in data.get('results', []):
 
@@ -36,17 +27,3 @@ def scan(path):
         }
         findings.append(finding)
     return findings
-
-
-
-
-# ai_response = interaction.output_text
-# ai_results = json.loads(ai_response)
-
-# for finding, ai in zip(findings, ai_results):
-#     ai['file_path'] = finding['file_path']
-#     ai['line_number'] = finding['line_number']
-#     ai['likelihood'] = finding['likelihood']
-#     ai['impact'] = finding['impact']
-
-# print(json.dumps(ai_results, indent=2))
