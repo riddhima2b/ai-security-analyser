@@ -4,14 +4,16 @@ Analyse ONLY the following security findings provided by SEMGREP.
 Return the output in a valid json format - 
 [
     {{
+        "id": "...",
         "title": "...",
+        "file path, line number":"...",
         "explanation": "...",
+        "impact":"...",
         "fix": "...",
     }}
 ]
-Keep the output short. 
-Do not invent any new findings. Include only title, explanation and fix in the answer.
-Rest of the data is already provided by Semgrep.
+Do not invent any new findings.
+Writes fixes accordingly, if no fix seems plausible say that based on the above information a suitable fix isn't found.
 
 Here are semgrep findings - 
 {findings_json}
