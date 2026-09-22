@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from scanner import scan
+from scanners.semgrep_scanner import scan
 from test_gemini import analyser
 
 app = FastAPI(title = "AI Security Vulnerability Analyser")
