@@ -15,9 +15,11 @@ osv_data = json.loads(osv_data.stdout)
 
 for result in osv_data.get('results', []):
 
-    findings = {
-        "package name" : result['packages'][0]['package']["name"],
-    }
+    for package in result.get('packages', []):
+
+        findings = {
+            "package name" : result['packages'][0]['package']["name"],
+        }
 #print(osv_data['results'][0]['packages'][0]['package']["name"])
 # print(osv_data['results'][]['vulnerabilities'])
 print(findings)
