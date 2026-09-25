@@ -1,0 +1,5 @@
+POSTGRES_USER=db_admin
+POSTGRES_PASSWORD=hbgv2418BFNV37vgt4c2
+POSTGRES_DB=projdb
+NODE_ENV=development
+JWT_SECRET = n9m94env36w-[m82e]
