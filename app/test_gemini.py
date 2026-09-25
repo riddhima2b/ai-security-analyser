@@ -6,10 +6,10 @@ load_dotenv()
 
 def analyser(findings):
 
-    d1 = dict(enumerate(findings, start=1))
+    #d1 = dict(enumerate(findings, start=1))
 
 
-    findings_json = json.dumps(d1, indent=2)
+    findings_json = json.dumps(findings, indent=2)
 
     with open("prompts/security_review.txt", "r") as f:
         prompt_format = f.read()
