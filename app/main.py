@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import json
 from scanners.semgrep_scanner import semgrepScan
 from scanners.gitleaks_scanner import gitLeaksScan
 from scanners.osv_scanner import osv_scan
@@ -26,5 +27,6 @@ if not any(findings.values()):
 
 ai_response = analyser(findings)
 
-print(ai_response)
+with open("ai_report.txt", "w") as file:
+    file.write(ai_response)
 shutil.rmtree(cloned)

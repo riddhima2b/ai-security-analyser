@@ -8,26 +8,48 @@ def osv_scan(path):
 
     findings = []
 
-    report_file = tempfile.NamedTemporaryFile(
-        suffix=".json",
-        delete=False
-    )
+    # report_file = tempfile.NamedTemporaryFile(
+    #     suffix=".json",
+    #     delete=False
+    # )
+    # report_file.close()
+    try:
 
-    report_path = report_file.name
-    report_file.close()
+        osv_data = subprocess.run(
+            [
+                "osv-scanner",
+                "scan",
+                "source",
+                path,
+                "--recursive",
+                "--format=json"
+            ],
+            capture_output=True,
+            text=True
+        )
+        
 
-    osv_data = subprocess.run(
-        [
-            "osv-scanner",
-            "scan",
-            "source",
-            path,
-            "--recursive",
-            "--format=json"
-        ],
-        capture_output=True,
-        text=True
-    )
+    except Exception as e:
+        print("Error running OSV Scanner:", str(e))
+        return findings
+    except FileNotFoundError:
+        print("OSV Scanner is not installed.")
+        return findings
+
+    except subprocess.TimeoutExpired:
+        print("OSV Scanner timed out.")
+        return findings
+
+    except OSError as e:
+        print("Error running OSV Scanner:", str(e))
+        return findings
+
+    # Check whether scanner execution failed
+    if osv_data.returncode != 0:
+        print("OSV Scanner exited with:", osv_data.returncode)
+        print("stderr:", osv_data.stderr)
+    if not osv_data.stdout.strip():
+            return findings
 
     try:
         osv_data = json.loads(osv_data.stdout)
