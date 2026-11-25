@@ -29,14 +29,18 @@ with ThreadPoolExecutor(max_workers=3) as executor:
         "secrets": secrets_future.result(),
         "osv": osv_future.result()
     }
-
-
 if not any(findings.values()):
     print("No issues found")
     exit()
 
 ai_response = analyser(findings)
+if ai_response["analysis"]:
+    with open("ai_report.md", "w") as file:
+        file.write(ai_response["analysis"])
 
-with open("ai_report.md", "w") as file:
-    file.write(ai_response)
+else:
+    with open("ai_report.md", "w") as file:
+        file.write("Gemini analysis failed. Please check the findings and try again.")
+        file.write(json.dumps(findings, indent=4))
+    
 shutil.rmtree(cloned)
