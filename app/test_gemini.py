@@ -31,7 +31,7 @@ def analyser(findings):
         }
     except Exception as e:
 
-        print(f"[WARNING] Gemini analysis failed: {e}")
+        # print(f"[WARNING] Gemini analysis failed: {e}")
 
         return {
             "success": False,

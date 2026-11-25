@@ -1,4 +1,3 @@
-from fastapi import FastAPI
 import json
 from scanners.semgrep_scanner import semgrepScan
 from scanners.gitleaks_scanner import gitLeaksScan
@@ -6,41 +5,53 @@ from scanners.osv_scanner import osv_scan
 from test_gemini import analyser
 from cloner import clone_repo
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import shutil 
-app = FastAPI(title = "AI Security Vulnerability Analyser")
 
-@app.get("/")
-def root():
-    return {"message": "Welcome to the AI Security Vulnerability Analyser API!"}
+def scan_repo_path(source="."):
+    cloned = None
+    if Path(source).expanduser().is_dir():
+        repo_path = str(Path(source).expanduser().resolve())
+    else:
+        cloned = clone_repo(source)
 
-path = input("Enter the repo to scan: ")
+        if not cloned:
+            raise RuntimeError("Unable to clone repository")
 
-cloned = clone_repo(path)
+        repo_path = cloned
 
-findings = {}
-with ThreadPoolExecutor(max_workers=3) as executor:
-    semgrep_future = executor.submit(semgrepScan, cloned)
-    secrets_future = executor.submit(gitLeaksScan, cloned)
-    osv_future = executor.submit(osv_scan, cloned)
+    try:
+        findings = {}
+        analysis = ""
+        with ThreadPoolExecutor(max_workers=3) as executor:
 
-    findings = {
-        "semgrep": semgrep_future.result(),
-        "secrets": secrets_future.result(),
-        "osv": osv_future.result()
-    }
-if not any(findings.values()):
-    print("No issues found")
-    exit()
+            semgrep_future = executor.submit(semgrepScan, repo_path)
+            secrets_future = executor.submit(gitLeaksScan, repo_path)
+            osv_future = executor.submit(osv_scan, repo_path)
 
-ai_response = analyser(findings)
-if ai_response["analysis"]:
-    with open("ai_report.md", "w") as file:
-        file.write(ai_response["analysis"])
+            findings = {
+                "semgrep": semgrep_future.result(),
+                "secrets": secrets_future.result(),
+                "osv": osv_future.result()
+            }
 
-else:
-    with open("ai_report.md", "w") as file:
-        file.write("Gemini analysis failed. Please check the findings and try again.")
-        file.write(json.dumps(findings, indent=4))
-    
-shutil.rmtree(cloned)
+        if not any(findings.values()):
+            analysis = "No security issues found."
+
+        else:
+            ai_response = analyser(findings)
+            if ai_response["analysis"]:
+                with open("ai_report.md", "w") as file:
+                    file.write(ai_response["analysis"])
+            else:
+                with open("ai_report.md", "w") as file:
+                    file.write("Gemini analysis failed. Please check the findings and try again.")
+                    file.write(json.dumps(findings, indent=4))
+        with open("ai_report.md", "w") as file:
+            file.write(analysis)
+        print("Analysis report saved to ai_report.md")
+        return findings
+    finally:
+        if cloned:
+            shutil.rmtree(cloned, ignore_errors=True)
