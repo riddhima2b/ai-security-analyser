@@ -45,9 +45,9 @@ def osv_scan(path):
         return findings
 
     # Check whether scanner execution failed
-    if osv_data.returncode != 0:
-        print("OSV Scanner exited with:", osv_data.returncode)
-        print("stderr:", osv_data.stderr)
+    # if osv_data.returncode != 0:
+    #     print("OSV Scanner exited with:", osv_data.returncode)
+    #     print("stderr:", osv_data.stderr)
     if not osv_data.stdout.strip():
             return findings
 
@@ -74,12 +74,12 @@ def osv_scan(path):
                                 "package_name": package_data["package"]["name"],
                                 "version": package_data["package"]["version"],
                                 "ecosystem": package_data["package"]["ecosystem"],
-                                "vulnerability_id": vulnerability["id"],
                                 "summary": vulnerability.get("summary"),
                                 "fixed_version": fixed_versions[0] if fixed_versions else None,
                             })
         if not findings:
-            print("No OSV vulnerabilities found")
+            #print("No OSV vulnerabilities found")
+            return findings
     except json.JSONDecodeError:
         print("Could not parse OSV JSON output")
         print("stdout:", osv_data.stdout)

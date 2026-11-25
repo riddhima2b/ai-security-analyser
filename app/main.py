@@ -5,6 +5,8 @@ from scanners.gitleaks_scanner import gitLeaksScan
 from scanners.osv_scanner import osv_scan
 from test_gemini import analyser
 from cloner import clone_repo
+from concurrent.futures import ThreadPoolExecutor
+
 import shutil 
 app = FastAPI(title = "AI Security Vulnerability Analyser")
 
@@ -15,11 +17,19 @@ def root():
 path = input("Enter the repo to scan: ")
 
 cloned = clone_repo(path)
-findings = {
-    "semgrep":semgrepScan(cloned),
-    "secrets": gitLeaksScan(cloned),
-    "osv": osv_scan(cloned)
+
+findings = {}
+with ThreadPoolExecutor(max_workers=3) as executor:
+    semgrep_future = executor.submit(semgrepScan, cloned)
+    secrets_future = executor.submit(gitLeaksScan, cloned)
+    osv_future = executor.submit(osv_scan, cloned)
+
+    findings = {
+        "semgrep": semgrep_future.result(),
+        "secrets": secrets_future.result(),
+        "osv": osv_future.result()
     }
+
 
 if not any(findings.values()):
     print("No issues found")
@@ -27,6 +37,6 @@ if not any(findings.values()):
 
 ai_response = analyser(findings)
 
-with open("ai_report.txt", "w") as file:
+with open("ai_report.md", "w") as file:
     file.write(ai_response)
 shutil.rmtree(cloned)
