@@ -12,8 +12,6 @@ def analyser(findings):
 
         findings_json = json.dumps(findings, indent=2)
         PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "security_review.txt"
-        print("Prompt path:", PROMPT_PATH)
-        print("Prompt exists:", PROMPT_PATH.exists())
         prompt_template = PROMPT_PATH.read_text(encoding="utf-8")
         prompt = prompt_template.replace("{findings_json}",findings_json)
 
