@@ -9,8 +9,10 @@ from pathlib import Path
 
 import shutil 
 
+
 def scan_repo_path(source="."):
     cloned = None
+
     if Path(source).expanduser().is_dir():
         repo_path = str(Path(source).expanduser().resolve())
     else:
@@ -22,8 +24,6 @@ def scan_repo_path(source="."):
         repo_path = cloned
 
     try:
-        findings = {}
-        analysis = ""
         with ThreadPoolExecutor(max_workers=3) as executor:
 
             semgrep_future = executor.submit(semgrepScan, repo_path)
@@ -37,21 +37,28 @@ def scan_repo_path(source="."):
             }
 
         if not any(findings.values()):
-            analysis = "No security issues found."
+            report = "# GrepSec Security Report\n\nNo security issues found."
 
         else:
             ai_response = analyser(findings)
-            if ai_response["analysis"]:
-                with open("ai_report.md", "w") as file:
-                    file.write(ai_response["analysis"])
+
+            if ai_response and ai_response.get("analysis"):
+                report = ai_response["analysis"]
+
             else:
-                with open("ai_report.md", "w") as file:
-                    file.write("Gemini analysis failed. Please check the findings and try again.")
-                    file.write(json.dumps(findings, indent=4))
-        with open("ai_report.md", "w") as file:
-            file.write(analysis)
+                report = (
+                    "# GrepSec Security Report\n\n"
+                    "Gemini analysis failed. Raw findings:\n\n"
+                    + json.dumps(findings, indent=4)
+                )
+
+        with open("ai_report.md", "w", encoding="utf-8") as file:
+            file.write(report)
+
         print("Analysis report saved to ai_report.md")
+
         return findings
+
     finally:
         if cloned:
             shutil.rmtree(cloned, ignore_errors=True)

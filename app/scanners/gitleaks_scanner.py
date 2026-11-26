@@ -1,49 +1,48 @@
+
 import subprocess
-import os
-import tempfile
-import json
+import shutil
+from pathlib import Path
 
-def gitLeaksScan(path):
-    findings = []
-    report_file = tempfile.NamedTemporaryFile(
-        suffix=".json",
-        delete=False
-    )
-    report_path = report_file.name
-    report_file.close()
+def gitLeaksScan(path="."):
+    report_path = Path("gitleaks-report.json")
+    report_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # First check managed installation
+    gitleaks = Path.home() / ".grepsec" / "bin" / "gitleaks"
 
-    try:
-        result = subprocess.run([
-            "gitleaks", "detect", "--source", path, 
+    # Fall back to system PATH
+    if not gitleaks.exists():
+        system_gitleaks = shutil.which("gitleaks")
+
+        if system_gitleaks:
+            gitleaks = Path(system_gitleaks)
+        else:
+            raise FileNotFoundError(
+                "Gitleaks binary not found. Run GrepSec dependency installer."
+            )
+
+    result = subprocess.run(
+        [
+            str(gitleaks),
+            "detect",
+            "--source", str(Path(path).resolve()),
             "--report-format", "json",
-                "--report-path", report_path, 
-                "-v"], capture_output=True, text=True
-        )
-        if result.returncode not in(0,1):
-            print("Error running gitleaks:", result.stderr)
-            return findings
-        if not os.path.exists(report_path):
-            return findings
-        with open(report_path, "r") as f:
-            result = json.load(f)
+            "--report-path", str(report_path.resolve()),
+            "--no-git",
+            "-v"
+        ],
+        capture_output=True,
+        text=True
+    )
 
-        for finding in result:
-            findings.append({
-                "rule_id": finding.get("RuleID"),
-                "description": finding.get("Description"),
-                "file_path": finding.get("File"),
-                "line_number": finding.get("StartLine"),
-                "fix": "Rotate the credentials and remove the file from the codebase. "
-                "You may also use git-filter repo to remove the file from the git history.",
-            })
-    except json.JSONDecodeError:
-        print("Could not parse Gitleaks JSON output")
+    if result.returncode not in (0, 1):
+        print("Gitleaks error:", result.stderr)
+        return []
+
+    if report_path.exists():
+        import json
+        with open(report_path, "r") as f:
+            findings = json.load(f)
         return findings
-    except Exception as e:
-        print("Error running Gitleaks:", str(e))
-        return findings
-    finally:
-        if os.path.exists(report_path):
-            os.remove(report_path)
-    return findings
+
+    return []

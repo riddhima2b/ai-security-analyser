@@ -1,49 +1,50 @@
 import subprocess
 import json
-import os
-import tempfile
 import shutil
+from pathlib import Path
 
-def osv_scan(path):
+def osv_scan(path="."):
 
     findings = []
+    osv_scanner = Path.home() / ".grepsec" / "bin" / "osv-scanner"
+    if not osv_scanner.exists():
+        system_scanner = shutil.which("osv-scanner")
 
+        if system_scanner:
+            osv_scanner = Path(system_scanner)
+        else:
+            print("OSV Scanner is not installed.")
+            return findings
     try:
-
-        osv_data = subprocess.run(
+        result = subprocess.run(
             [
-                "osv-scanner",
+                str(osv_scanner),
                 "scan",
                 "source",
-                path,
+                str(Path(path).resolve()),
                 "--recursive",
                 "--format=json"
             ],
             capture_output=True,
-            text=True
+            text=True,
+            timeout=300
         )
-        
-
-    except Exception as e:
-        print("Error running OSV Scanner:", str(e))
-        return findings
-    except FileNotFoundError:
-        print("OSV Scanner is not installed.")
-        return findings
 
     except subprocess.TimeoutExpired:
-        print("OSV Scanner timed out.")
+        print("[ERROR] OSV Scanner timed out.")
         return findings
 
-    except OSError as e:
-        print("Error running OSV Scanner:", str(e))
+    except OSError:
+        print("[ERROR] Could not execute OSV Scanner.")
         return findings
 
-    if not osv_data.stdout.strip():
-            return findings
+    # Parse JSON even if the scanner returned a non-zero exit code.
+    # A non-zero exit code can also indicate discovered vulnerabilities.
+    if not result.stdout.strip():
+        return findings
 
     try:
-        osv_data = json.loads(osv_data.stdout)
+        osv_data = json.loads(result.stdout)
 
         unique_findings = {}
         for result in osv_data.get("results", []):
