@@ -10,7 +10,7 @@ from pathlib import Path
 import shutil 
 
 
-def scan_repo_path(source="."):
+def scan_repo_path(source=".",ai_enabled=False):
     cloned = None
 
     if Path(source).expanduser().is_dir():
@@ -46,14 +46,16 @@ def scan_repo_path(source="."):
         if not any(findings.values()):
             report = "# GrepSec Security Report\n\nNo security issues found."
 
-        else:
+        elif ai_enabled:
             ai_response = analyser(findings)
 
             if ai_response and ai_response.get("analysis"):
                 report = ai_response["analysis"]
-
             else:
                 report = generate_fallback_report(findings)
+
+        else:
+            report = generate_fallback_report(findings)
 
         with open("ai_report.md", "w", encoding="utf-8") as file:
             file.write(report)
