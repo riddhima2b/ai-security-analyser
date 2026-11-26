@@ -2,7 +2,7 @@
 import subprocess
 import shutil
 from pathlib import Path
-
+import json
 def gitLeaksScan(path="."):
     report_path = Path("gitleaks-report.json")
     report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -40,9 +40,25 @@ def gitLeaksScan(path="."):
         return []
 
     if report_path.exists():
-        import json
+        
         with open(report_path, "r") as f:
             findings = json.load(f)
-        return findings
+
+        sanitized_findings = []
+
+        for finding in findings:
+            finding["Secret"] = "[REDACTED]"
+            finding["Match"] = "[REDACTED]"
+
+            finding["File"] = Path(finding.get("File", "")).name
+            finding["Author"] = ""
+            finding["Email"] = ""
+            finding["Message"] = ""
+            sanitized_findings.append(finding)
+
+        with open(report_path, "w") as f:
+            json.dump(sanitized_findings, f, indent=4)
+
+        return sanitized_findings
 
     return []
