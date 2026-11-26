@@ -2,7 +2,7 @@ import json
 from scanners.semgrep_scanner import semgrepScan
 from scanners.gitleaks_scanner import gitLeaksScan
 from scanners.osv_scanner import osv_scan
-from test_gemini import analyser
+from test_gemini import analyser, generate_fallback_report
 from cloner import clone_repo
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -53,11 +53,7 @@ def scan_repo_path(source="."):
                 report = ai_response["analysis"]
 
             else:
-                report = (
-                    "# GrepSec Security Report\n\n"
-                    "Gemini analysis failed. Raw findings:\n\n"
-                    + json.dumps(findings, indent=4)
-                )
+                report = generate_fallback_report(findings)
 
         with open("ai_report.md", "w", encoding="utf-8") as file:
             file.write(report)
