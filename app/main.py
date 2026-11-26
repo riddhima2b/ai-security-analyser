@@ -17,6 +17,8 @@ def scan_repo_path(source="."):
         repo_path = str(Path(source).expanduser().resolve())
     else:
         cloned = clone_repo(source)
+        if cloned is None:
+            raise RuntimeError("Repository cloning failed.")
 
         if not cloned:
             raise RuntimeError("Unable to clone repository")

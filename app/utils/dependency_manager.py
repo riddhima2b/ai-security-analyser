@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from urllib.parse import urlparse
 import hashlib
 import json
 import os
@@ -208,6 +208,28 @@ def prompt_installation(missing_dependencies: list[str]) -> list[str]:
 
 
 def _github_json(url: str) -> dict[str, Any]:
+    context = ssl.create_default_context(cafile=certifi.where())
+
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "GrepSec-dependency-installer",
+        },
+    )
+
+def _github_json(url: str) -> dict[str, Any]:
+    parsed = urlparse(url)
+
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != "api.github.com"
+        or parsed.port not in (None, 443)
+        or parsed.username
+        or parsed.password
+    ):
+        raise ValueError("Only GitHub HTTPS API URLs are allowed.")
+
     context = ssl.create_default_context(cafile=certifi.where())
 
     request = urllib.request.Request(
