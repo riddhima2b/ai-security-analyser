@@ -99,8 +99,10 @@ grepsec scan --ai https://github.com/username/repository
 ### Gemini API Configuration
 
 AI analysis requires a Google Gemini API key.
+You will be prompted for an API key, which occurs when there is no env variable set for the API key.
+We currently only support Gemini API keys, support for more LLMs coming soon.
 
-Set your API key as an environment variable:
+Alternatively, set your API key as an environment variable:
 
 **macOS / Linux**
 
