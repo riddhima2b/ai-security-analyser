@@ -1,0 +1,1 @@
+A simple SAST tool to check for open source vulnerabilities, leaked secrets and code issues.
