@@ -1,0 +1,42 @@
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grepsec"
+version = "0.1.0"
+description = "AI-powered security scanner"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+    "google-genai==2.24.0",
+    "protobuf==7.36.2",
+    "python-dotenv==1.2.4",
+    "certifi",
+]
+
+[project.scripts]
+grepsec = "cli:main"
+
+[tool.setuptools]
+py-modules = [
+    "cli",
+    "main",
+    "cloner",
+    "test_gemini",
+]
+
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "scanners*",
+    "utils*",
+    "prompts*",
+]
+
+[tool.setuptools.package-data]
+prompts = ["security_review.txt"]

@@ -26,6 +26,11 @@ def scan_repo_path(source="."):
         repo_path = cloned
 
     try:
+        findings = {
+            "Code Issues": ["None found"],
+            "Leaked Secrets": ["None found"],
+            "Open-Source Vulnerabilities": ["None found"]
+        }
         with ThreadPoolExecutor(max_workers=3) as executor:
 
             semgrep_future = executor.submit(semgrepScan, repo_path)
@@ -33,9 +38,9 @@ def scan_repo_path(source="."):
             osv_future = executor.submit(osv_scan, repo_path)
 
             findings = {
-                "semgrep": semgrep_future.result(),
-                "secrets": secrets_future.result(),
-                "osv": osv_future.result()
+                "Code Issues": semgrep_future.result(),
+                "Leaked Secrets": secrets_future.result(),
+                "Open-Source Vulnerabilities": osv_future.result()
             }
 
         if not any(findings.values()):
